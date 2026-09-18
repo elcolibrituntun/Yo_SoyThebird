@@ -1,645 +1,789 @@
--- =============================================================================
--- CONFIGURACIÓN DE SEGURIDAD Y DATOS (100% Nativo, Sin Requests)
--- =============================================================================
-local Players = game:GetService("Players")
-local CoreGui = game:GetService("CoreGui")
-local TweenService = game:GetService("TweenService")
+-- = 
+-- CONFIGURACIÓN DE SEGURIDAD Y DATOS (100% Nativo, Sin Requests) 
+-- = 
+local Players = game:GetService("Players") 
+local CoreGui = game:GetService("CoreGui") 
+local TweenService = game:GetService("TweenService") 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local CreatorName = "Yo_SoyThebird"
+local CreatorName = "Yo_SoyThebird" 
 local TargetPlayerName = "" 
 local LoopSpeed = 0.01 
 local IsScriptActive = true
 
--- Variables de Control de Armas y Objetivos
+-- Variables de Control de Armas y Objetivos 
 local ExperimentalKnifeName = "Rainbow" 
-local TargetEveryoneActive = false     
+local TargetEveryoneActive = false
+
 local TargetExceptName = "" 
 local SafeDistanceActive = false 
-local KnivesPerSecond = 1 -- NUEVO: Cantidad de cuchillos que tira por segundo
+local KnivesPerSecond = 1 -- Cantidad de cuchillos que tira por segundo
 
--- Opciones del Spam Aleatorio Masivo
+-- Opciones del Spam Aleatorio Masivo 
 local IsRandomSpamActive = false 
-local WeaponsToSpamAmount = 10   
+local WeaponsToSpamAmount = 10
 
--- Base de datos gigante unificada de Murder Mystery 2
-local FullMM2WeaponDatabase = {
-	"Chroma Candleflame", "Chroma Lightbringer", "Chroma Darkbringer", "Chroma Luger", 
-	"Chroma Laser", "Chroma Shark", "Chroma Slasher", "Chroma Heat", "Chroma Tides", 
-	"Chroma Fang", "Chroma Deathshard", "Chroma Boneblade", "Chroma Saw", "Chroma Seer", 
-	"Chroma Gingerblade", "Chroma Gemstone", "Chroma Swirly Gun", "Harvester", "Corrupt", 
-	"Nik's Scythe", "Icewing", "Batwing", "Elderwood Scythe", "Logchopper", "Hallowscythe", 
-	"Icebreaker", "Swirly Axe", "Swirly Blade", "Darksword", "Darkshot", "Reaver", "Scythe",
-	"Rainbow", "Candleflame", "Ocean", "Waves", "Watergun", "Latte", "Spectre", "Phantom", 
-	"Icebeam", "Iceblaster", "Sugar", "Candy", "Luger", "Green Luger", "Red Luger", 
-	"Ginger Luger", "Eternal", "Eternal II", "Eternal III", "Eternal IV", "Eternal Cane", 
-	"Luger Cane", "Chill", "Clockwork", "Handsaw", "Pixel", "Virtual", "Blaster", "Amerilaser", 
-	"Old Glory", "Shark", "Laser", "Slasher", "Fang", "Deathshard", "Tides", "Heat", "Flames", 
-	"Saw", "Spider", "Gemstone", "Seer", "Red Seer", "Blue Seer", "Purple Seer", "Yellow Seer", 
-	"Orange Seer", "Xmas", "Winter's Edge", "Ice Dragon", "Iceshard", "Frostbite", "Frostsaber", 
-	"Gingerblade", "Peppermint", "Snowflake", "Jinglegun", "Minty", "Boneblade", "Hallow's Edge", 
-	"Hallow's Blade", "Pumpking", "Vampire's Edge", "Ripper", "Bat", "Makeshift", "Turkey",
-	"America", "Blood", "Cowboy", "Ghost", "Golden", "Laser Vintage", "Phaser", "Prince", 
-	"Shadow", "Splitter", "JD", "Elite", "Green Marble", "Web", "Rupture", "Tree", "Goo", 
-	"Scratch", "Red Scratch", "Blue Scratch", "Skelly", "Cavern", "Ginger", "Vampire", 
-	"Predator", "Emerald", "Sparkle", "Viper", "Midnight", "Aurora", "Katana"
+-- NUEVO: Tabla para almacenar RemoteEvents adicionales personalizados para pruebas 
+local CustomRemoteEvents = {}
+
+-- Base de datos gigante unificada de Murder Mystery 2 
+local FullMM2WeaponDatabase = { 
+"Chroma Candleflame", "Chroma Lightbringer", "Chroma Darkbringer", "Chroma Luger", 
+"Chroma Laser", "Chroma Shark", "Chroma Slasher", "Chroma Heat", "Chroma Tides", 
+"Chroma Fang", "Chroma Deathshard", "Chroma Boneblade", "Chroma Saw", "Chroma Seer", 
+"Chroma Gingerblade", "Chroma Gemstone", "Chroma Swirly Gun", "Harvester", "Corrupt", 
+"Nik's Scythe", "Icewing", "Batwing", "Elderwood Scythe", "Logchopper", "Hallowscythe", 
+"Icebreaker", "Swirly Axe", "Swirly Blade", "Darksword", "Darkshot", "Reaver", "Scythe", 
+"Rainbow", "Candleflame", "Ocean", "Waves", "Watergun", "Latte", "Spectre", "Phantom", 
+"Icebeam", "Iceblaster", "Sugar", "Candy", "Luger", "Green Luger", "Red Luger", 
+"Ginger Luger", "Eternal", "Eternal II", "Eternal III", "Eternal IV", "Eternal Cane", 
+"Luger Cane", "Chill", "Clockwork", "Handsaw", "Pixel", "Virtual", "Blaster", "Amerilaser", 
+"Old Glory", "Shark", "Laser", "Slasher", "Fang", "Deathshard", "Tides", "Heat", "Flames", 
+"Saw", "Spider", "Gemstone", "Seer", "Red Seer", "Blue Seer", "Purple Seer", "Yellow Seer", 
+"Orange Seer", "Xmas", "Winter's Edge", "Ice Dragon", "Iceshard", "Frostbite", "Frostsaber", 
+"Gingerblade", "Peppermint", "Snowflake", "Jinglegun", "Minty", "Boneblade", "Hallow's Edge", 
+"Hallow's Blade", "Pumpking", "Vampire's Edge", "Ripper", "Bat", "Makeshift", "Turkey", 
+"America", "Blood", "Cowboy", "Ghost", "Golden", "Laser Vintage", "Phaser", "Prince", 
+"Shadow", "Splitter", "JD", "Elite", "Green Marble", "Web", "Rupture", "Tree", "Goo", 
+"Scratch", "Red Scratch", "Blue Scratch", "Skelly", "Cavern", "Ginger", "Vampire", 
+"Predator", "Emerald", "Sparkle", "Viper", "Midnight", "Aurora", "Katana" 
 }
 
 local EveryFoundWeapon = {}
 
-local function DeepScanWeapons()
-	local TempList = {}
-	for _, Name in ipairs(FullMM2WeaponDatabase) do
-		table.insert(TempList, Name)
-	end
-	local Weapons = ReplicatedStorage:FindFirstChild("Weapons") or ReplicatedStorage:FindFirstChild("Items")
-	if Weapons then
-		for _, Folder in ipairs(Weapons:GetChildren()) do
-			for _, Item in ipairs(Folder:GetChildren()) do
-				if not table.find(TempList, Item.Name) then
-					table.insert(TempList, Item.Name)
-				end
-			end
-		end
-	end
-	EveryFoundWeapon = TempList
+local function DeepScanWeapons() 
+local TempList = {} 
+for _, Name in ipairs(FullMM2WeaponDatabase) do 
+table.insert(TempList, Name) 
+end 
+local Weapons = ReplicatedStorage:FindFirstChild("Weapons") or ReplicatedStorage:FindFirstChild("Items") 
+if Weapons then 
+for _, Folder in ipairs(Weapons:GetChildren()) do 
+for _, Item in ipairs(Folder:GetChildren()) do 
+if not table.find(TempList, Item.Name) then 
+table.insert(TempList, Item.Name) 
+end 
+end 
+end 
+end 
+EveryFoundWeapon = TempList 
 end
 
 DeepScanWeapons()
 
-local CreatorId = 0
-pcall(function() CreatorId = Players:GetUserIdFromNameAsync(CreatorName) end)
-if CreatorId == 0 then CreatorId = 205364172 end 
+local CreatorId = 0 
+pcall(function() CreatorId = Players:GetUserIdFromNameAsync(CreatorName) end) 
+if CreatorId  0 then CreatorId = 205364172 end
 
 local AvatarImage, IsReady = Players:GetUserThumbnailAsync(CreatorId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size60x60)
 
-if CoreGui:FindFirstChild("KnifeAuraUI") then
-	CoreGui.KnifeAuraUI:Destroy()
+if CoreGui:FindFirstChild("KnifeAuraUI") then 
+CoreGui.KnifeAuraUI:Destroy() 
 end
 
-local function FindPlayerPartial(Text)
-	if Text == "" then return nil end
-	local LowerText = string.lower(Text)
-	for _, P in ipairs(Players:GetPlayers()) do
-		if string.find(string.lower(P.Name), LowerText, 1, true) or string.find(string.lower(P.DisplayName), LowerText, 1, true) then
-			return P
-		end
-	end
-	return nil
+local function FindPlayerPartial(Text) 
+if Text  "" then return nil end 
+local LowerText = string.lower(Text) 
+for _, P in ipairs(Players:GetPlayers()) do 
+if string.find(string.lower(P.Name), LowerText, 1, true) or string.find(string.lower(P.DisplayName), LowerText, 1, true) then 
+return P 
+end 
+end 
+return nil 
 end
 
--- =============================================================================
--- CREACIÓN DE LA INTERFAZ GRÁFICA DESDE CERO
--- =============================================================================
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "KnifeAuraUI"
-ScreenGui.Parent = CoreGui
+-- = 
+-- CREACIÓN DE LA INTERFAZ GRÁFICA DESDE CERO 
+-- = 
+local ScreenGui = Instance.new("ScreenGui") 
+ScreenGui.Name = "KnifeAuraUI" 
+ScreenGui.Parent = CoreGui 
 ScreenGui.ResetOnSpawn = false
 
-local ControlBar = Instance.new("Frame")
-ControlBar.Size = UDim2.new(0, 190, 0, 40)
+local ControlBar = Instance.new("Frame") 
+ControlBar.Size = UDim2.new(0, 190, 0, 40) 
 ControlBar.Position = UDim2.new(0, 20, 0.3, 0) 
-ControlBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-ControlBar.BorderSizePixel = 0
-ControlBar.Active = true
+ControlBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20) 
+ControlBar.BorderSizePixel = 0 
+ControlBar.Active = true 
 ControlBar.Draggable = true 
 ControlBar.Parent = ScreenGui
 
-local BarCorner = Instance.new("UICorner")
-BarCorner.CornerRadius = UDim.new(0, 8)
+local BarCorner = Instance.new("UICorner") 
+BarCorner.CornerRadius = UDim.new(0, 8) 
 BarCorner.Parent = ControlBar
 
-local BarStroke = Instance.new("UIStroke")
-BarStroke.Color = Color3.fromRGB(45, 45, 45)
-BarStroke.Thickness = 1.5
+local BarStroke = Instance.new("UIStroke") 
+BarStroke.Color = Color3.fromRGB(45, 45, 45) 
+BarStroke.Thickness = 1.5 
 BarStroke.Parent = ControlBar
 
-local BarImage = Instance.new("ImageLabel")
-BarImage.Size = UDim2.new(0, 28, 0, 28)
-BarImage.Position = UDim2.new(0, 6, 0, 6)
-BarImage.BackgroundTransparency = 1
-BarImage.Image = AvatarImage
+local BarImage = Instance.new("ImageLabel") 
+BarImage.Size = UDim2.new(0, 28, 0, 28) 
+BarImage.Position = UDim2.new(0, 6, 0, 6) 
+BarImage.BackgroundTransparency = 1 
+BarImage.Image = AvatarImage 
 BarImage.Parent = ControlBar
 
-local BarImageCorner = Instance.new("UICorner")
-BarImageCorner.CornerRadius = UDim.new(0, 6)
+local BarImageCorner = Instance.new("UICorner") 
+BarImageCorner.CornerRadius = UDim.new(0, 6) 
 BarImageCorner.Parent = BarImage
 
-local ToggleGuiButton = Instance.new("TextButton")
-ToggleGuiButton.Size = UDim2.new(0, 144, 0, 40)
-ToggleGuiButton.Position = UDim2.new(0, 40, 0, 0)
-ToggleGuiButton.BackgroundTransparency = 1
+local ToggleGuiButton = Instance.new("TextButton") 
+ToggleGuiButton.Size = UDim2.new(0, 144, 0, 40) 
+ToggleGuiButton.Position = UDim2.new(0, 40, 0, 0) 
+ToggleGuiButton.BackgroundTransparency = 1 
 ToggleGuiButton.Text = "Owner: " .. CreatorName 
-ToggleGuiButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleGuiButton.TextSize = 13
-ToggleGuiButton.Font = Enum.Font.SourceSansBold
-ToggleGuiButton.TextXAlignment = Enum.TextXAlignment.Left
+ToggleGuiButton.TextColor3 = Color3.fromRGB(255, 255, 255) 
+ToggleGuiButton.TextSize = 13 
+ToggleGuiButton.Font = Enum.Font.SourceSansBold 
+ToggleGuiButton.TextXAlignment = Enum.TextXAlignment.Left 
 ToggleGuiButton.Parent = ControlBar
 
--- Ventana Principal (Contenedor Desplegable ampliado a 680 de alto para alojar la nueva opción)
-local MainWindow = Instance.new("Frame")
-MainWindow.Size = UDim2.new(0, 300, 0, 680)
-MainWindow.Position = UDim2.new(0.5, -150, 0.4, -340)
-MainWindow.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-MainWindow.BorderSizePixel = 0
-MainWindow.Active = true
+-- Ventana Principal ampliada a 760 de alto para alojar los nuevos controles de RemoteEvents 
+local MainWindow = Instance.new("Frame") 
+MainWindow.Size = UDim2.new(0, 300, 0, 760) 
+MainWindow.Position = UDim2.new(0.5, -150, 0.4, -380) 
+MainWindow.BackgroundColor3 = Color3.fromRGB(30, 30, 30) 
+MainWindow.BorderSizePixel = 0 
+MainWindow.Active = true 
 MainWindow.Draggable = true 
 MainWindow.Parent = ScreenGui
 
-ToggleGuiButton.MouseButton1Click:Connect(function()
-	MainWindow.Visible = not MainWindow.Visible
+ToggleGuiButton.MouseButton1Click:Connect(function() 
+MainWindow.Visible = not MainWindow.Visible 
 end)
 
-local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 10)
+local MainCorner = Instance.new("UICorner") 
+MainCorner.CornerRadius = UDim.new(0, 10) 
 MainCorner.Parent = MainWindow
 
-local MainStroke = Instance.new("UIStroke")
-MainStroke.Color = Color3.fromRGB(45, 45, 45)
-MainStroke.Thickness = 1.5
+local MainStroke = Instance.new("UIStroke") 
+MainStroke.Color = Color3.fromRGB(45, 45, 45) 
+MainStroke.Thickness = 1.5 
 MainStroke.Parent = MainWindow
 
-local HeaderImage = Instance.new("ImageLabel")
-HeaderImage.Size = UDim2.new(0, 30, 0, 30)
-HeaderImage.Position = UDim2.new(0, 10, 0, 5)
-HeaderImage.BackgroundTransparency = 1
-HeaderImage.Image = AvatarImage
+local HeaderImage = Instance.new("ImageLabel") 
+HeaderImage.Size = UDim2.new(0, 30, 0, 30) 
+HeaderImage.Position = UDim2.new(0, 10, 0, 5) 
+HeaderImage.BackgroundTransparency = 1 
+HeaderImage.Image = AvatarImage 
 HeaderImage.Parent = MainWindow
 
-local HeaderText = Instance.new("TextLabel")
-HeaderText.Size = UDim2.new(0, 180, 0, 30)
-HeaderText.Position = UDim2.new(0, 45, 0, 5)
-HeaderText.BackgroundTransparency = 1
-HeaderText.Text = "By: " .. CreatorName
-HeaderText.TextColor3 = Color3.fromRGB(255, 255, 255)
-HeaderText.TextSize = 16
-HeaderText.Font = Enum.Font.SourceSansBold
-HeaderText.TextXAlignment = Enum.TextXAlignment.Left
+local HeaderText = Instance.new("TextLabel") 
+HeaderText.Size = UDim2.new(0, 180, 0, 30) 
+HeaderText.Position = UDim2.new(0, 45, 0, 5) 
+HeaderText.BackgroundTransparency = 1 
+HeaderText.Text = "By: " .. CreatorName 
+HeaderText.TextColor3 = Color3.fromRGB(255, 255, 255) 
+HeaderText.TextSize = 16 
+HeaderText.Font = Enum.Font.SourceSansBold 
+HeaderText.TextXAlignment = Enum.TextXAlignment.Left 
 HeaderText.Parent = MainWindow
 
-local CloseButton = Instance.new("TextButton")
-CloseButton.Size = UDim2.new(0, 30, 0, 30)
-CloseButton.Position = UDim2.new(1, -35, 0, 5)
-CloseButton.BackgroundTransparency = 1
-CloseButton.Text = "✕"
-CloseButton.TextColor3 = Color3.fromRGB(255, 75, 75)
-CloseButton.TextSize = 18
-CloseButton.Font = Enum.Font.SourceSansBold
+local CloseButton = Instance.new("TextButton") 
+CloseButton.Size = UDim2.new(0, 30, 0, 30) 
+CloseButton.Position = UDim2.new(1, -35, 0, 5) 
+CloseButton.BackgroundTransparency = 1 
+CloseButton.Text = "✕" 
+CloseButton.TextColor3 = Color3.fromRGB(255, 75, 75) 
+CloseButton.TextSize = 18 
+CloseButton.Font = Enum.Font.SourceSansBold 
 CloseButton.Parent = MainWindow
 
-local AlertFrame = Instance.new("Frame")
-AlertFrame.Size = UDim2.new(0, 260, 0, 150)
-AlertFrame.Position = UDim2.new(0.5, -130, 0.5, -75)
-AlertFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-AlertFrame.BorderSizePixel = 0
-AlertFrame.Visible = false
-AlertFrame.ZIndex = 10
+local AlertFrame = Instance.new("Frame") 
+AlertFrame.Size = UDim2.new(0, 260, 0, 150) 
+AlertFrame.Position = UDim2.new(0.5, -130, 0.5, -75) 
+AlertFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20) 
+AlertFrame.BorderSizePixel = 0 
+AlertFrame.Visible = false 
+AlertFrame.ZIndex = 10 
 AlertFrame.Parent = MainWindow
 
-local AlertCorner = Instance.new("UICorner")
-AlertCorner.CornerRadius = UDim.new(0, 8)
+local AlertCorner = Instance.new("UICorner") 
+AlertCorner.CornerRadius = UDim.new(0, 8) 
 AlertCorner.Parent = AlertFrame
 
-local AlertStroke = Instance.new("UIStroke")
-AlertStroke.Color = Color3.fromRGB(231, 76, 60)
-AlertStroke.Thickness = 1.5
+local AlertStroke = Instance.new("UIStroke") 
+AlertStroke.Color = Color3.fromRGB(231, 76, 60) 
+AlertStroke.Thickness = 1.5 
 AlertStroke.Parent = AlertFrame
 
-local AlertText = Instance.new("TextLabel")
-AlertText.Size = UDim2.new(1, -20, 0, 70)
-AlertText.Position = UDim2.new(0, 10, 0, 10)
-AlertText.BackgroundTransparency = 1
-AlertText.Text = "Are you sure you want to close permanently?\n\nYou can just hide/minimize the menu by clicking the top bar button!"
-AlertText.TextColor3 = Color3.fromRGB(255, 255, 255)
-AlertText.TextSize = 13
-AlertText.Font = Enum.Font.SourceSansBold
-AlertText.TextWrapped = true
-AlertText.ZIndex = 10
+local AlertText = Instance.new("TextLabel") 
+AlertText.Size = UDim2.new(1, -20, 0, 70) 
+AlertText.Position = UDim2.new(0, 10, 0, 10) 
+AlertText.BackgroundTransparency = 1 
+AlertText.Text = "Are you sure you want to close permanently?\n\nYou can just hide/minimize the menu by clicking the top bar button!" 
+AlertText.TextColor3 = Color3.fromRGB(255, 255, 255) 
+AlertText.TextSize = 13 
+AlertText.Font = Enum.Font.SourceSansBold 
+AlertText.TextWrapped = true 
+AlertText.ZIndex = 10 
 AlertText.Parent = AlertFrame
 
-local ConfirmCloseBtn = Instance.new("TextButton")
-ConfirmCloseBtn.Size = UDim2.new(0, 110, 0, 30)
-ConfirmCloseBtn.Position = UDim2.new(0, 15, 1, -45)
-ConfirmCloseBtn.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
-ConfirmCloseBtn.Text = "Close Permanently"
-ConfirmCloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ConfirmCloseBtn.TextSize = 12
-ConfirmCloseBtn.Font = Enum.Font.SourceSansBold
-ConfirmCloseBtn.ZIndex = 10
+local ConfirmCloseBtn = Instance.new("TextButton") 
+ConfirmCloseBtn.Size = UDim2.new(0, 110, 0, 30) 
+ConfirmCloseBtn.Position = UDim2.new(0, 15, 1, -45) 
+ConfirmCloseBtn.BackgroundColor3 = Color3.fromRGB(231, 76, 60) 
+ConfirmCloseBtn.Text = "Close Permanently" 
+ConfirmCloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255) 
+ConfirmCloseBtn.TextSize = 12 
+ConfirmCloseBtn.Font = Enum.Font.SourceSansBold 
+ConfirmCloseBtn.ZIndex = 10 
 ConfirmCloseBtn.Parent = AlertFrame
 
-local ConfirmCorner = Instance.new("UICorner")
-ConfirmCorner.CornerRadius = UDim.new(0, 4)
+local ConfirmCorner = Instance.new("UICorner") 
+ConfirmCorner.CornerRadius = UDim.new(0, 4) 
 ConfirmCorner.Parent = ConfirmCloseBtn
 
-local CancelCloseBtn = Instance.new("TextButton")
-CancelCloseBtn.Size = UDim2.new(0, 110, 0, 30)
-CancelCloseBtn.Position = UDim2.new(1, -125, 1, -45)
-CancelCloseBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
-CancelCloseBtn.Text = "Just Hide Menu"
-CancelCloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-CancelCloseBtn.TextSize = 12
-CancelCloseBtn.Font = Enum.Font.SourceSansBold
-CancelCloseBtn.ZIndex = 10
+local CancelCloseBtn = Instance.new("TextButton") 
+CancelCloseBtn.Size = UDim2.new(0, 110, 0, 30) 
+CancelCloseBtn.Position = UDim2.new(1, -125, 1, -45) 
+CancelCloseBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113) 
+CancelCloseBtn.Text = "Just Hide Menu" 
+CancelCloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255) 
+CancelCloseBtn.TextSize = 12 
+CancelCloseBtn.Font = Enum.Font.SourceSansBold 
+CancelCloseBtn.ZIndex = 10 
 CancelCloseBtn.Parent = AlertFrame
 
-local CancelCorner = Instance.new("UICorner")
-CancelCorner.CornerRadius = UDim.new(0, 4)
+local CancelCorner = Instance.new("UICorner") 
+CancelCorner.CornerRadius = UDim.new(0, 4) 
 CancelCorner.Parent = CancelCloseBtn
 
-CloseButton.MouseButton1Click:Connect(function() AlertFrame.Visible = true end)
-ConfirmCloseBtn.MouseButton1Click:Connect(function() IsScriptActive = false ScreenGui:Destroy() end)
+CloseButton.MouseButton1Click:Connect(function() AlertFrame.Visible = true end) 
+ConfirmCloseBtn.MouseButton1Click:Connect(function() IsScriptActive = false ScreenGui:Destroy() end) 
 CancelCloseBtn.MouseButton1Click:Connect(function() AlertFrame.Visible = false MainWindow.Visible = false end)
--- Caja 1: Velocidad
-local SpeedLabel = Instance.new("TextLabel")
-SpeedLabel.Size = UDim2.new(0, 280, 0, 20)
-SpeedLabel.Position = UDim2.new(0, 10, 0, 45)
-SpeedLabel.BackgroundTransparency = 1
-SpeedLabel.Text = "Knife Aura Speed (Seconds):"
-SpeedLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-SpeedLabel.TextSize = 14
-SpeedLabel.Font = Enum.Font.SourceSans
-SpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Caja 1: Velocidad 
+local SpeedLabel = Instance.new("TextLabel") 
+SpeedLabel.Size = UDim2.new(0, 280, 0, 20) 
+SpeedLabel.Position = UDim2.new(0, 10, 0, 45) 
+SpeedLabel.BackgroundTransparency = 1 
+SpeedLabel.Text = "Knife Aura Speed (Seconds):" 
+SpeedLabel.TextColor3 = Color3.fromRGB(200, 200, 200) 
+SpeedLabel.TextSize = 14 
+SpeedLabel.Font = Enum.Font.SourceSans 
+SpeedLabel.TextXAlignment = Enum.TextXAlignment.Left 
 SpeedLabel.Parent = MainWindow
-local SpeedInput = Instance.new("TextBox")
-SpeedInput.Size = UDim2.new(0, 280, 0, 30)
-SpeedInput.Position = UDim2.new(0, 10, 0, 65)
-SpeedInput.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-SpeedInput.BorderSizePixel = 0
-SpeedInput.Text = tostring(LoopSpeed)
-SpeedInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-SpeedInput.TextSize = 14
-SpeedInput.Font = Enum.Font.SourceSans
+
+local SpeedInput = Instance.new("TextBox") 
+SpeedInput.Size = UDim2.new(0, 280, 0, 30) 
+SpeedInput.Position = UDim2.new(0, 10, 0, 65) 
+SpeedInput.BackgroundColor3 = Color3.fromRGB(45, 45, 45) 
+SpeedInput.BorderSizePixel = 0 
+SpeedInput.Text = tostring(LoopSpeed) 
+SpeedInput.TextColor3 = Color3.fromRGB(255, 255, 255) 
+SpeedInput.TextSize = 14 
+SpeedInput.Font = Enum.Font.SourceSans 
 SpeedInput.Parent = MainWindow
-local SpeedCorner = Instance.new("UICorner")
-SpeedCorner.CornerRadius = UDim.new(0, 5)
+
+local SpeedCorner = Instance.new("UICorner") 
+SpeedCorner.CornerRadius = UDim.new(0, 5) 
 SpeedCorner.Parent = SpeedInput
-SpeedInput.FocusLost:Connect(function()
-local NumberValue = tonumber(SpeedInput.Text)
-if NumberValue then LoopSpeed = NumberValue else SpeedInput.Text = tostring(LoopSpeed) end
+
+SpeedInput.FocusLost:Connect(function() 
+local NumberValue = tonumber(SpeedInput.Text) 
+if NumberValue then LoopSpeed = NumberValue else SpeedInput.Text = tostring(LoopSpeed) end 
 end)
--- Caja 2: Cambiar de jugador
-local PlayerLabel = Instance.new("TextLabel")
-PlayerLabel.Size = UDim2.new(0, 280, 0, 20)
-PlayerLabel.Position = UDim2.new(0, 10, 0, 105)
-PlayerLabel.BackgroundTransparency = 1
-PlayerLabel.Text = "Change Player (Username, Display or Initials):"
-PlayerLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-PlayerLabel.TextSize = 14
-PlayerLabel.Font = Enum.Font.SourceSans
-PlayerLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Caja 2: Cambiar de jugador 
+local PlayerLabel = Instance.new("TextLabel") 
+PlayerLabel.Size = UDim2.new(0, 280, 0, 20) 
+PlayerLabel.Position = UDim2.new(0, 10, 0, 105) 
+PlayerLabel.BackgroundTransparency = 1 
+PlayerLabel.Text = "Change Player (Username, Display or Initials):" 
+PlayerLabel.TextColor3 = Color3.fromRGB(200, 200, 200) 
+PlayerLabel.TextSize = 14 
+PlayerLabel.Font = Enum.Font.SourceSans 
+PlayerLabel.TextXAlignment = Enum.TextXAlignment.Left 
 PlayerLabel.Parent = MainWindow
-local PlayerInput = Instance.new("TextBox")
-PlayerInput.Size = UDim2.new(0, 280, 0, 30)
-PlayerInput.Position = UDim2.new(0, 10, 0, 125)
-PlayerInput.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-PlayerInput.BorderSizePixel = 0
-PlayerInput.Text = ""
-PlayerInput.PlaceholderText = "Enter target details..."
-PlayerInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-PlayerInput.TextSize = 14
-PlayerInput.Font = Enum.Font.SourceSans
+
+local PlayerInput = Instance.new("TextBox") 
+PlayerInput.Size = UDim2.new(0, 280, 0, 30) 
+PlayerInput.Position = UDim2.new(0, 10, 0, 125) 
+PlayerInput.BackgroundColor3 = Color3.fromRGB(45, 45, 45) 
+PlayerInput.BorderSizePixel = 0 
+PlayerInput.Text = "" 
+PlayerInput.PlaceholderText = "Enter target details..." 
+PlayerInput.TextColor3 = Color3.fromRGB(255, 255, 255) 
+PlayerInput.TextSize = 14 
+PlayerInput.Font = Enum.Font.SourceSans 
 PlayerInput.Parent = MainWindow
-local PlayerCorner = Instance.new("UICorner")
-PlayerCorner.CornerRadius = UDim.new(0, 5)
+
+local PlayerCorner = Instance.new("UICorner") 
+PlayerCorner.CornerRadius = UDim.new(0, 5) 
 PlayerCorner.Parent = PlayerInput
+
 PlayerInput.FocusLost:Connect(function() TargetPlayerName = PlayerInput.Text end)
--- Cantidad de Armas Aleatorias
-local RandomAmountLabel = Instance.new("TextLabel")
-RandomAmountLabel.Size = UDim2.new(0, 280, 0, 20)
-RandomAmountLabel.Position = UDim2.new(0, 10, 0, 165)
-RandomAmountLabel.BackgroundTransparency = 1
-RandomAmountLabel.Text = "Random Weapons Amount to Shoot:"
-RandomAmountLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-RandomAmountLabel.TextSize = 14
-RandomAmountLabel.Font = Enum.Font.SourceSans
-RandomAmountLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Cantidad de Armas Aleatorias 
+local RandomAmountLabel = Instance.new("TextLabel") 
+RandomAmountLabel.Size = UDim2.new(0, 280, 0, 20) 
+RandomAmountLabel.Position = UDim2.new(0, 10, 0, 165) 
+RandomAmountLabel.BackgroundTransparency = 1 
+RandomAmountLabel.Text = "Random Weapons Amount to Shoot:" 
+RandomAmountLabel.TextColor3 = Color3.fromRGB(200, 200, 200) 
+RandomAmountLabel.TextSize = 14 
+RandomAmountLabel.Font = Enum.Font.SourceSans 
+RandomAmountLabel.TextXAlignment = Enum.TextXAlignment.Left 
 RandomAmountLabel.Parent = MainWindow
-local RandomAmountInput = Instance.new("TextBox")
-RandomAmountInput.Size = UDim2.new(0, 280, 0, 30)
-RandomAmountInput.Position = UDim2.new(0, 10, 0, 185)
-RandomAmountInput.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-RandomAmountInput.BorderSizePixel = 0
-RandomAmountInput.Text = tostring(WeaponsToSpamAmount)
-RandomAmountInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-RandomAmountInput.TextSize = 14
-RandomAmountInput.Font = Enum.Font.SourceSans
+
+local RandomAmountInput = Instance.new("TextBox") 
+RandomAmountInput.Size = UDim2.new(0, 280, 0, 30) 
+RandomAmountInput.Position = UDim2.new(0, 10, 0, 185) 
+RandomAmountInput.BackgroundColor3 = Color3.fromRGB(45, 45, 45) 
+RandomAmountInput.BorderSizePixel = 0 
+RandomAmountInput.Text = tostring(WeaponsToSpamAmount) 
+RandomAmountInput.TextColor3 = Color3.fromRGB(255, 255, 255) 
+RandomAmountInput.TextSize = 14 
+RandomAmountInput.Font = Enum.Font.SourceSans 
 RandomAmountInput.Parent = MainWindow
-local AmountCorner = Instance.new("UICorner")
-AmountCorner.CornerRadius = UDim.new(0, 5)
+
+local AmountCorner = Instance.new("UICorner") 
+AmountCorner.CornerRadius = UDim.new(0, 5) 
 AmountCorner.Parent = RandomAmountInput
-RandomAmountInput.FocusLost:Connect(function()
-local IntValue = tonumber(RandomAmountInput.Text)
-if IntValue and IntValue > 0 then WeaponsToSpamAmount = math.floor(IntValue) else RandomAmountInput.Text = tostring(WeaponsToSpamAmount) end
+
+RandomAmountInput.FocusLost:Connect(function() 
+local IntValue = tonumber(RandomAmountInput.Text) 
+if IntValue and IntValue > 0 then WeaponsToSpamAmount = math.floor(IntValue) else RandomAmountInput.Text = tostring(WeaponsToSpamAmount) end 
 end)
--- Switch (Toggle) para Activar o Desactivar el Modo Aleatorio
-local RandomModeLabel = Instance.new("TextLabel")
-RandomModeLabel.Size = UDim2.new(0, 150, 0, 30)
-RandomModeLabel.Position = UDim2.new(0, 10, 0, 230)
-RandomModeLabel.BackgroundTransparency = 1
-RandomModeLabel.Text = "Random Weapons Mode:"
-RandomModeLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-RandomModeLabel.TextSize = 14
-RandomModeLabel.Font = Enum.Font.SourceSans
-RandomModeLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Switch (Toggle) para Activar o Desactivar el Modo Aleatorio 
+local RandomModeLabel = Instance.new("TextLabel") 
+RandomModeLabel.Size = UDim2.new(0, 150, 0, 30) 
+RandomModeLabel.Position = UDim2.new(0, 10, 0, 230) 
+RandomModeLabel.BackgroundTransparency = 1 
+RandomModeLabel.Text = "Random Weapons Mode:" 
+RandomModeLabel.TextColor3 = Color3.fromRGB(200, 200, 200) 
+RandomModeLabel.TextSize = 14 
+RandomModeLabel.Font = Enum.Font.SourceSans 
+RandomModeLabel.TextXAlignment = Enum.TextXAlignment.Left 
 RandomModeLabel.Parent = MainWindow
-local RandomModeButton = Instance.new("TextButton")
-RandomModeButton.Size = UDim2.new(0, 100, 0, 30)
-RandomModeButton.Position = UDim2.new(0, 190, 0, 230)
-RandomModeButton.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
-RandomModeButton.BorderSizePixel = 0
-RandomModeButton.Text = "DISABLED"
-RandomModeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-RandomModeButton.TextSize = 14
-RandomModeButton.Font = Enum.Font.SourceSansBold
+
+local RandomModeButton = Instance.new("TextButton") 
+RandomModeButton.Size = UDim2.new(0, 100, 0, 30) 
+RandomModeButton.Position = UDim2.new(0, 190, 0, 230) 
+RandomModeButton.BackgroundColor3 = Color3.fromRGB(231, 76, 60) 
+RandomModeButton.BorderSizePixel = 0 
+RandomModeButton.Text = "DISABLED" 
+RandomModeButton.TextColor3 = Color3.fromRGB(255, 255, 255) 
+RandomModeButton.TextSize = 14 
+RandomModeButton.Font = Enum.Font.SourceSansBold 
 RandomModeButton.Parent = MainWindow
-local RandomCorner = Instance.new("UICorner")
-RandomCorner.CornerRadius = UDim.new(0, 5)
+
+local RandomCorner = Instance.new("UICorner") 
+RandomCorner.CornerRadius = UDim.new(0, 5) 
 RandomCorner.Parent = RandomModeButton
-RandomModeButton.MouseButton1Click:Connect(function()
-IsRandomSpamActive = not IsRandomSpamActive
-if IsRandomSpamActive then
-RandomModeButton.Text = "ENABLED"
-RandomModeButton.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
-else
-RandomModeButton.Text = "DISABLED"
-RandomModeButton.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
-end
+
+RandomModeButton.MouseButton1Click:Connect(function() 
+IsRandomSpamActive = not IsRandomSpamActive 
+if IsRandomSpamActive then 
+RandomModeButton.Text = "ENABLED" 
+RandomModeButton.BackgroundColor3 = Color3.fromRGB(46, 204, 113) 
+else 
+RandomModeButton.Text = "DISABLED" 
+RandomModeButton.BackgroundColor3 = Color3.fromRGB(231, 76, 60) 
+end 
 end)
--- Caja Experimental: Knife name
-local ExpKnifeLabel = Instance.new("TextLabel")
-ExpKnifeLabel.Size = UDim2.new(0, 280, 0, 20)
-ExpKnifeLabel.Position = UDim2.new(0, 10, 0, 275)
-ExpKnifeLabel.BackgroundTransparency = 1
-ExpKnifeLabel.Text = "Experimental: Knife name"
-ExpKnifeLabel.TextColor3 = Color3.fromRGB(230, 126, 34)
-ExpKnifeLabel.TextSize = 14
-ExpKnifeLabel.Font = Enum.Font.SourceSansBold
-ExpKnifeLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Caja Experimental: Knife name 
+local ExpKnifeLabel = Instance.new("TextLabel") 
+ExpKnifeLabel.Size = UDim2.new(0, 280, 0, 20) 
+ExpKnifeLabel.Position = UDim2.new(0, 10, 0, 275) 
+ExpKnifeLabel.BackgroundTransparency = 1 
+ExpKnifeLabel.Text = "Experimental: Knife name" 
+ExpKnifeLabel.TextColor3 = Color3.fromRGB(230, 126, 34) 
+ExpKnifeLabel.TextSize = 14 
+ExpKnifeLabel.Font = Enum.Font.SourceSansBold 
+ExpKnifeLabel.TextXAlignment = Enum.TextXAlignment.Left 
 ExpKnifeLabel.Parent = MainWindow
-local ExpKnifeInput = Instance.new("TextBox")
-ExpKnifeInput.Size = UDim2.new(0, 280, 0, 30)
-ExpKnifeInput.Position = UDim2.new(0, 10, 0, 295)
-ExpKnifeInput.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-ExpKnifeInput.BorderSizePixel = 0
-ExpKnifeInput.Text = "Rainbow"
-ExpKnifeInput.PlaceholderText = "Forced weapon entry string..."
-ExpKnifeInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-ExpKnifeInput.TextSize = 14
-ExpKnifeInput.Font = Enum.Font.SourceSans
+
+local ExpKnifeInput = Instance.new("TextBox") 
+ExpKnifeInput.Size = UDim2.new(0, 280, 0, 30) 
+ExpKnifeInput.Position = UDim2.new(0, 10, 0, 295) 
+ExpKnifeInput.BackgroundColor3 = Color3.fromRGB(45, 45, 45) 
+ExpKnifeInput.BorderSizePixel = 0 
+ExpKnifeInput.Text = "Rainbow" 
+ExpKnifeInput.PlaceholderText = "Forced weapon entry string..." 
+ExpKnifeInput.TextColor3 = Color3.fromRGB(255, 255, 255) 
+ExpKnifeInput.TextSize = 14 
+ExpKnifeInput.Font = Enum.Font.SourceSans 
 ExpKnifeInput.Parent = MainWindow
-local ExpKnifeCorner = Instance.new("UICorner")
-ExpKnifeCorner.CornerRadius = UDim.new(0, 5)
+
+local ExpKnifeCorner = Instance.new("UICorner") 
+ExpKnifeCorner.CornerRadius = UDim.new(0, 5) 
 ExpKnifeCorner.Parent = ExpKnifeInput
-ExpKnifeInput.FocusLost:Connect(function()
-if ExpKnifeInput.Text ~= "" then ExperimentalKnifeName = ExpKnifeInput.Text end
+
+ExpKnifeInput.FocusLost:Connect(function() 
+if ExpKnifeInput.Text ~= "" then ExperimentalKnifeName = ExpKnifeInput.Text end 
 end)
--- Caja: Target Everyone Except
-local ExceptLabel = Instance.new("TextLabel")
-ExceptLabel.Size = UDim2.new(0, 280, 0, 20)
-ExceptLabel.Position = UDim2.new(0, 10, 0, 335)
-ExceptLabel.BackgroundTransparency = 1
-ExceptLabel.Text = "Target Everyone Except (Blank = Save Me):"
-ExceptLabel.TextColor3 = Color3.fromRGB(52, 152, 219)
-ExceptLabel.TextSize = 13
-ExceptLabel.Font = Enum.Font.SourceSansBold
-ExceptLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Caja: Target Everyone Except 
+local ExceptLabel = Instance.new("TextLabel") 
+ExceptLabel.Size = UDim2.new(0, 280, 0, 20) 
+ExceptLabel.Position = UDim2.new(0, 10, 0, 335) 
+ExceptLabel.BackgroundTransparency = 1 
+ExceptLabel.Text = "Target Everyone Except (Blank = Save Me):" 
+ExceptLabel.TextColor3 = Color3.fromRGB(52, 152, 219) 
+ExceptLabel.TextSize = 13 
+ExceptLabel.Font = Enum.Font.SourceSansBold 
+ExceptLabel.TextXAlignment = Enum.TextXAlignment.Left 
 ExceptLabel.Parent = MainWindow
-local ExceptInput = Instance.new("TextBox")
-ExceptInput.Size = UDim2.new(0, 280, 0, 30)
-ExceptInput.Position = UDim2.new(0, 10, 0, 355)
-ExceptInput.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-ExceptInput.BorderSizePixel = 0
-ExceptInput.Text = ""
-ExceptInput.PlaceholderText = "Save username, display or initials..."
-ExceptInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-ExceptInput.TextSize = 14
-ExceptInput.Font = Enum.Font.SourceSans
+
+local ExceptInput = Instance.new("TextBox") 
+ExceptInput.Size = UDim2.new(0, 280, 0, 30) 
+ExceptInput.Position = UDim2.new(0, 10, 0, 355) 
+ExceptInput.BackgroundColor3 = Color3.fromRGB(45, 45, 45) 
+ExceptInput.BorderSizePixel = 0 
+ExceptInput.Text = "" 
+ExceptInput.PlaceholderText = "Save username, display or initials..." 
+ExceptInput.TextColor3 = Color3.fromRGB(255, 255, 255) 
+ExceptInput.TextSize = 14 
+ExceptInput.Font = Enum.Font.SourceSans 
 ExceptInput.Parent = MainWindow
-local ExceptCorner = Instance.new("UICorner")
-ExceptCorner.CornerRadius = UDim.new(0, 5)
+
+local ExceptCorner = Instance.new("UICorner") 
+ExceptCorner.CornerRadius = UDim.new(0, 5) 
 ExceptCorner.Parent = ExceptInput
+
 ExceptInput.FocusLost:Connect(function() TargetExceptName = ExceptInput.Text end)
--- --- [ NUEVO: CASILLA DE CUCHILLOS POR SEGUNDO ] ---
-local KPSLabel = Instance.new("TextLabel")
-KPSLabel.Size = UDim2.new(0, 280, 0, 20)
-KPSLabel.Position = UDim2.new(0, 10, 0, 395)
-KPSLabel.BackgroundTransparency = 1
-KPSLabel.Text = "Knives fired per second amount:"
-KPSLabel.TextColor3 = Color3.fromRGB(155, 89, 182) -- Púrpura elegante
-KPSLabel.TextSize = 14
-KPSLabel.Font = Enum.Font.SourceSansBold
-KPSLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Casilla de Cuchillos por Segundo 
+local KPSLabel = Instance.new("TextLabel") 
+KPSLabel.Size = UDim2.new(0, 280, 0, 20) 
+KPSLabel.Position = UDim2.new(0, 10, 0, 395) 
+KPSLabel.BackgroundTransparency = 1 
+KPSLabel.Text = "Knives fired per second amount:" 
+KPSLabel.TextColor3 = Color3.fromRGB(155, 89, 182) 
+KPSLabel.TextSize = 14 
+KPSLabel.Font = Enum.Font.SourceSansBold 
+KPSLabel.TextXAlignment = Enum.TextXAlignment.Left 
 KPSLabel.Parent = MainWindow
-local KPSInput = Instance.new("TextBox")
-KPSInput.Size = UDim2.new(0, 280, 0, 30)
-KPSInput.Position = UDim2.new(0, 10, 0, 415)
-KPSInput.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-KPSInput.BorderSizePixel = 0
-KPSInput.Text = tostring(KnivesPerSecond)
-KPSInput.PlaceholderText = "Amount of single fires per tick..."
-KPSInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-KPSInput.TextSize = 14
-KPSInput.Font = Enum.Font.SourceSans
+
+local KPSInput = Instance.new("TextBox") 
+KPSInput.Size = UDim2.new(0, 280, 0, 30) 
+KPSInput.Position = UDim2.new(0, 10, 0, 415) 
+KPSInput.BackgroundColor3 = Color3.fromRGB(45, 45, 45) 
+KPSInput.BorderSizePixel = 0 
+KPSInput.Text = tostring(KnivesPerSecond) 
+KPSInput.PlaceholderText = "Amount of single fires per tick..." 
+KPSInput.TextColor3 = Color3.fromRGB(255, 255, 255) 
+KPSInput.TextSize = 14 
+KPSInput.Font = Enum.Font.SourceSans 
 KPSInput.Parent = MainWindow
-local KPSCorner = Instance.new("UICorner")
-KPSCorner.CornerRadius = UDim.new(0, 5)
+
+local KPSCorner = Instance.new("UICorner") 
+KPSCorner.CornerRadius = UDim.new(0, 5) 
 KPSCorner.Parent = KPSInput
-KPSInput.FocusLost:Connect(function()
-local IntValue = tonumber(KPSInput.Text)
-if IntValue and IntValue > 0 then KnivesPerSecond = math.floor(IntValue) else KPSInput.Text = tostring(KnivesPerSecond) end
+
+KPSInput.FocusLost:Connect(function() 
+local IntValue = tonumber(KPSInput.Text) 
+if IntValue and IntValue > 0 then KnivesPerSecond = math.floor(IntValue) else KPSInput.Text = tostring(KnivesPerSecond) end 
 end)
--- Switch para No Coincidir en el Torso (Safe Mode 3 Studs Away)
-local SafeLabel = Instance.new("TextLabel")
-SafeLabel.Size = UDim2.new(0, 150, 0, 30)
-SafeLabel.Position = UDim2.new(0, 10, 0, 460)
-SafeLabel.BackgroundTransparency = 1
-SafeLabel.Text = "Safe Mode (3 Studs Away):"
-SafeLabel.TextColor3 = Color3.fromRGB(241, 196, 15)
-SafeLabel.TextSize = 14
-SafeLabel.Font = Enum.Font.SourceSans
-SafeLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- NUEVO: Opción para añadir Custom Remote Events para pruebas 
+local CustomEventLabel = Instance.new("TextLabel") 
+CustomEventLabel.Size = UDim2.new(0, 280, 0, 20) 
+CustomEventLabel.Position = UDim2.new(0, 10, 0, 455) 
+CustomEventLabel.BackgroundTransparency = 1 
+CustomEventLabel.Text = "Add Custom RemoteEvent (Path/Name):" 
+CustomEventLabel.TextColor3 = Color3.fromRGB(52, 231, 228) -- Cian brillante 
+CustomEventLabel.TextSize = 13 
+CustomEventLabel.Font = Enum.Font.SourceSansBold 
+CustomEventLabel.TextXAlignment = Enum.TextXAlignment.Left 
+CustomEventLabel.Parent = MainWindow
+
+local CustomEventInput = Instance.new("TextBox") 
+CustomEventInput.Size = UDim2.new(0, 190, 0, 30) 
+CustomEventInput.Position = UDim2.new(0, 10, 0, 475) 
+CustomEventInput.BackgroundColor3 = Color3.fromRGB(45, 45, 45) 
+CustomEventInput.BorderSizePixel = 0 
+CustomEventInput.Text = "" 
+CustomEventInput.PlaceholderText = "Ej. ReplicatedStorage.MiRemote" 
+CustomEventInput.TextColor3 = Color3.fromRGB(255, 255, 255) 
+CustomEventInput.TextSize = 13 
+CustomEventInput.Font = Enum.Font.SourceSans 
+CustomEventInput.Parent = MainWindow
+
+local CustomEventCorner = Instance.new("UICorner") 
+CustomEventCorner.CornerRadius = UDim.new(0, 5) 
+CustomEventCorner.Parent = CustomEventInput
+
+local AddEventBtn = Instance.new("TextButton") 
+AddEventBtn.Size = UDim2.new(0, 80, 0, 30) 
+AddEventBtn.Position = UDim2.new(0, 210, 0, 475) 
+AddEventBtn.BackgroundColor3 = Color3.fromRGB(52, 152, 219) 
+AddEventBtn.BorderSizePixel = 0 
+AddEventBtn.Text = "Add Event" 
+AddEventBtn.TextColor3 = Color3.fromRGB(255, 255, 255) 
+AddEventBtn.TextSize = 12 
+AddEventBtn.Font = Enum.Font.SourceSansBold 
+AddEventBtn.Parent = MainWindow
+
+local AddBtnCorner = Instance.new("UICorner") 
+AddBtnCorner.CornerRadius = UDim.new(0, 5) 
+AddBtnCorner.Parent = AddEventBtn
+
+-- Lógica para buscar y añadir dinámicamente el RemoteEvent escrito 
+AddEventBtn.MouseButton1Click:Connect(function() 
+local textPath = CustomEventInput.Text 
+if textPath ~= "" then 
+local obj = game 
+local success = true 
+for segment in string.gmatch(textPath, "[^.]+") do 
+if obj then 
+obj = obj:FindFirstChild(segment) 
+else 
+success = false 
+break 
+end 
+end
+
+	if obj and obj:IsA("RemoteEvent") then
+		if not table.find(CustomRemoteEvents, obj) then
+			table.insert(CustomRemoteEvents, obj)
+			CustomEventInput.Text = "¡Añadido con éxito!"
+			task.delay(1.5, function() CustomEventInput.Text = "" end)
+		else
+			CustomEventInput.Text = "¡Ya está en la lista!"
+			task.delay(1.5, function() CustomEventInput.Text = "" end)
+		end
+	else
+		CustomEventInput.Text = "¡No es un Remote válido!"
+		task.delay(1.5, function() CustomEventInput.Text = "" end)
+	end
+end
+
+end)
+
+-- Switch para No Coincidir en el Torso (Safe Mode 3 Studs Away) 
+local SafeLabel = Instance.new("TextLabel") 
+SafeLabel.Size = UDim2.new(0, 150, 0, 30) 
+SafeLabel.Position = UDim2.new(0, 10, 0, 515) 
+SafeLabel.BackgroundTransparency = 1 
+SafeLabel.Text = "Safe Mode (3 Studs Away):" 
+SafeLabel.TextColor3 = Color3.fromRGB(241, 196, 15) 
+SafeLabel.TextSize = 14 
+SafeLabel.Font = Enum.Font.SourceSans 
+SafeLabel.TextXAlignment = Enum.TextXAlignment.Left 
 SafeLabel.Parent = MainWindow
-local SafeModeButton = Instance.new("TextButton")
-SafeModeButton.Size = UDim2.new(0, 100, 0, 30)
-SafeModeButton.Position = UDim2.new(0, 190, 0, 460)
-SafeModeButton.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
-SafeModeButton.BorderSizePixel = 0
-SafeModeButton.Text = "DISABLED"
-SafeModeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-SafeModeButton.TextSize = 14
-SafeModeButton.Font = Enum.Font.SourceSansBold
+
+local SafeModeButton = Instance.new("TextButton") 
+SafeModeButton.Size = UDim2.new(0, 100, 0, 30) 
+SafeModeButton.Position = UDim2.new(0, 190, 0, 515) 
+SafeModeButton.BackgroundColor3 = Color3.fromRGB(231, 76, 60) 
+SafeModeButton.BorderSizePixel = 0 
+SafeModeButton.Text = "DISABLED" 
+SafeModeButton.TextColor3 = Color3.fromRGB(255, 255, 255) 
+SafeModeButton.TextSize = 14 
+SafeModeButton.Font = Enum.Font.SourceSansBold 
 SafeModeButton.Parent = MainWindow
-local SafeCorner = Instance.new("UICorner")
-SafeCorner.CornerRadius = UDim.new(0, 5)
+
+local SafeCorner = Instance.new("UICorner") 
+SafeCorner.CornerRadius = UDim.new(0, 5) 
 SafeCorner.Parent = SafeModeButton
-SafeModeButton.MouseButton1Click:Connect(function()
-SafeDistanceActive = not SafeDistanceActive
-if SafeDistanceActive then
-SafeModeButton.Text = "ENABLED"
-SafeModeButton.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
-else
-SafeModeButton.Text = "DISABLED"
-SafeModeButton.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
-end
+
+SafeModeButton.MouseButton1Click:Connect(function() 
+SafeDistanceActive = not SafeDistanceActive 
+if SafeDistanceActive then 
+SafeModeButton.Text = "ENABLED" 
+SafeModeButton.BackgroundColor3 = Color3.fromRGB(46, 204, 113) 
+else 
+SafeModeButton.Text = "DISABLED" 
+SafeModeButton.BackgroundColor3 = Color3.fromRGB(231, 76, 60) 
+end 
 end)
--- Target Everyone Toggle Switch
-local EveryoneLabel = Instance.new("TextLabel")
-EveryoneLabel.Size = UDim2.new(0, 150, 0, 30)
-EveryoneLabel.Position = UDim2.new(0, 10, 0, 505)
-EveryoneLabel.BackgroundTransparency = 1
-EveryoneLabel.Text = "Target Everyone:"
-EveryoneLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-EveryoneLabel.TextSize = 14
-EveryoneLabel.Font = Enum.Font.SourceSans
-EveryoneLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Target Everyone Toggle Switch 
+local EveryoneLabel = Instance.new("TextLabel") 
+EveryoneLabel.Size = UDim2.new(0, 150, 0, 30) 
+EveryoneLabel.Position = UDim2.new(0, 10, 0, 560) 
+EveryoneLabel.BackgroundTransparency = 1 
+EveryoneLabel.Text = "Target Everyone:" 
+EveryoneLabel.TextColor3 = Color3.fromRGB(200, 200, 200) 
+EveryoneLabel.TextSize = 14 
+EveryoneLabel.Font = Enum.Font.SourceSans 
+EveryoneLabel.TextXAlignment = Enum.TextXAlignment.Left 
 EveryoneLabel.Parent = MainWindow
-local EveryoneButton = Instance.new("TextButton")
-EveryoneButton.Size = UDim2.new(0, 100, 0, 30)
-EveryoneButton.Position = UDim2.new(0, 190, 0, 505)
-EveryoneButton.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
-EveryoneButton.BorderSizePixel = 0
-EveryoneButton.Text = "DISABLED"
-EveryoneButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-EveryoneButton.TextSize = 14
-EveryoneButton.Font = Enum.Font.SourceSansBold
+
+local EveryoneButton = Instance.new("TextButton") 
+EveryoneButton.Size = UDim2.new(0, 100, 0, 30) 
+EveryoneButton.Position = UDim2.new(0, 190, 0, 560) 
+EveryoneButton.BackgroundColor3 = Color3.fromRGB(231, 76, 60) 
+EveryoneButton.BorderSizePixel = 0 
+EveryoneButton.Text = "DISABLED" 
+EveryoneButton.TextColor3 = Color3.fromRGB(255, 255, 255) 
+EveryoneButton.TextSize = 14 
+EveryoneButton.Font = Enum.Font.SourceSansBold 
 EveryoneButton.Parent = MainWindow
-local EveryoneCorner = Instance.new("UICorner")
-EveryoneCorner.CornerRadius = UDim.new(0, 5)
+
+local EveryoneCorner = Instance.new("UICorner") 
+EveryoneCorner.CornerRadius = UDim.new(0, 5) 
 EveryoneCorner.Parent = EveryoneButton
-EveryoneButton.MouseButton1Click:Connect(function()
-TargetEveryoneActive = not TargetEveryoneActive
-if TargetEveryoneActive then
-EveryoneButton.Text = "ENABLED"
-EveryoneButton.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
-else
-EveryoneButton.Text = "DISABLED"
-EveryoneButton.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
-end
+
+EveryoneButton.MouseButton1Click:Connect(function() 
+TargetEveryoneActive = not TargetEveryoneActive 
+if TargetEveryoneActive then 
+EveryoneButton.Text = "ENABLED" 
+EveryoneButton.BackgroundColor3 = Color3.fromRGB(46, 204, 113) 
+else 
+EveryoneButton.Text = "DISABLED" 
+EveryoneButton.BackgroundColor3 = Color3.fromRGB(231, 76, 60) 
+end 
 end)
--- Interruptor de Encendido/Apagado General
-local ToggleLabel = Instance.new("TextLabel")
-ToggleLabel.Size = UDim2.new(0, 150, 0, 30)
-ToggleLabel.Position = UDim2.new(0, 10, 0, 560)
-ToggleLabel.BackgroundTransparency = 1
-ToggleLabel.Text = "Knife Aura Status:"
-ToggleLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-ToggleLabel.TextSize = 14
-ToggleLabel.Font = Enum.Font.SourceSans
-ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Interruptor de Encendido/Apagado General 
+local ToggleLabel = Instance.new("TextLabel") 
+ToggleLabel.Size = UDim2.new(0, 150, 0, 30) 
+ToggleLabel.Position = UDim2.new(0, 10, 0, 615) 
+ToggleLabel.BackgroundTransparency = 1 
+ToggleLabel.Text = "Knife Aura Status:" 
+ToggleLabel.TextColor3 = Color3.fromRGB(200, 200, 200) 
+ToggleLabel.TextSize = 14 
+ToggleLabel.Font = Enum.Font.SourceSans 
+ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left 
 ToggleLabel.Parent = MainWindow
-local ToggleButton = Instance.new("TextButton")
-ToggleButton.Size = UDim2.new(0, 100, 0, 30)
-ToggleButton.Position = UDim2.new(0, 190, 0, 560)
-ToggleButton.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
-ToggleButton.BorderSizePixel = 0
-ToggleButton.Text = "ENABLED"
-ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleButton.TextSize = 14
-ToggleButton.Font = Enum.Font.SourceSansBold
+
+local ToggleButton = Instance.new("TextButton") 
+ToggleButton.Size = UDim2.new(0, 100, 0, 30) 
+ToggleButton.Position = UDim2.new(0, 190, 0, 615) 
+ToggleButton.BackgroundColor3 = Color3.fromRGB(46, 204, 113) 
+ToggleButton.BorderSizePixel = 0 
+ToggleButton.Text = "ENABLED" 
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255) 
+ToggleButton.TextSize = 14 
+ToggleButton.Font = Enum.Font.SourceSansBold 
 ToggleButton.Parent = MainWindow
-local ToggleCorner = Instance.new("UICorner")
-ToggleCorner.CornerRadius = UDim.new(0, 5)
+
+local ToggleCorner = Instance.new("UICorner") 
+ToggleCorner.CornerRadius = UDim.new(0, 5) 
 ToggleCorner.Parent = ToggleButton
-ToggleButton.MouseButton1Click:Connect(function()
-IsScriptActive = not IsScriptActive
-if IsScriptActive then
-ToggleButton.Text = "ENABLED"
-ToggleButton.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
-else
-ToggleButton.Text = "DISABLED"
-ToggleButton.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
-end
+
+ToggleButton.MouseButton1Click:Connect(function() 
+IsScriptActive = not IsScriptActive 
+if IsScriptActive then 
+ToggleButton.Text = "ENABLED" 
+ToggleButton.BackgroundColor3 = Color3.fromRGB(46, 204, 113) 
+else 
+ToggleButton.Text = "DISABLED" 
+ToggleButton.BackgroundColor3 = Color3.fromRGB(231, 76, 60) 
+end 
 end)
--- =============================================================================
--- LÓGICA DE LANZAMIENTO COMPATIBLE CON CONTROL DE CUCHILLOS POR SEGUNDO
--- =============================================================================
-local LocalPlayer = Players.LocalPlayer
+
+-- = 
+-- LÓGICA DE LANZAMIENTO COMPATIBLE CON CUSTOM REMOTES Y CONTROL DE KPS 
+-- = 
+local LocalPlayer = Players.LocalPlayer 
 local TraditionalEvent = LocalPlayer:WaitForChild("ClientRemotes", 5) and LocalPlayer.ClientRemotes:WaitForChild("KnifeThrow", 5)
-local function GetCobaltEvent()
-local Character = LocalPlayer.Character
-if Character then
-local Knife = Character:FindFirstChild("Knife")
-if Knife then
-local Events = Knife:FindFirstChild("Events")
-if Events then return Events:FindFirstChild("KnifeThrown") end
+
+local function GetCobaltEvent() 
+local Character = LocalPlayer.Character 
+if Character then 
+local Knife = Character:FindFirstChild("Knife") 
+if Knife then 
+local Events = Knife:FindFirstChild("Events") 
+if Events then return Events:FindFirstChild("KnifeThrown") end 
+end 
+end 
+return nil 
 end
-end
-return nil
-end
-local function FireKnifeFromCharacter(Character)
-if not Character then return end
-local Torso = Character:FindFirstChild("UpperTorso") or Character:FindFirstChild("Torso") or Character:FindFirstChild("HumanoidRootPart")
-if not Torso then return end
-local Target = GetWorkspacePart() or Instance.new("Part")
+
+local function FireKnifeFromCharacter(Character) 
+if not Character then return end 
+local Torso = Character:FindFirstChild("UpperTorso") or Character:FindFirstChild("Torso") or Character:FindFirstChild("HumanoidRootPart") 
+if not Torso then return end 
+local Target = GetWorkspacePart() or Instance.new("Part") 
 local CobaltEvent = GetCobaltEvent()
+
 -- Itera dinámicamente según la cantidad definida en KnivesPerSecond
 for k = 1, KnivesPerSecond do
-if IsRandomSpamActive then
-for i = 1, WeaponsToSpamAmount do
-task.spawn(function()
-local Grados = math.random() * 6.28318
-local ConvX = math.cos(Grados)
-local ConvZ = math.sin(Grados)
-local Offset = SafeDistanceActive and Vector3.new(0, 3, 0) or Vector3.new(0, 0, 0)
-local P_Inicio = Torso.Position + Vector3.new(ConvX * 0.05, 0, ConvZ * 0.05) + Offset
-local P_Destino = Torso.Position + Vector3.new(ConvX * 600, 0, ConvZ * 600) + Offset
-local RandomWeapon = EveryFoundWeapon[math.random(1, #EveryFoundWeapon)]
-if TraditionalEvent then
-TraditionalEvent:InvokeServer(CFrame.new(P_Inicio, P_Destino), P_Destino, RandomWeapon, Target)
+	if IsRandomSpamActive then
+		for i = 1, WeaponsToSpamAmount do
+			task.spawn(function()
+				local Grados = math.random() * 6.28318
+				local ConvX = math.cos(Grados)
+				local ConvZ = math.sin(Grados)
+				local Offset = SafeDistanceActive and Vector3.new(0, 3, 0) or Vector3.new(0, 0, 0)
+				local P_Inicio = Torso.Position + Vector3.new(ConvX * 0.05, 0, ConvZ * 0.05) + Offset
+				local P_Destino = Torso.Position + Vector3.new(ConvX * 600, 0, ConvZ * 600) + Offset
+				local RandomWeapon = EveryFoundWeapon[math.random(1, #EveryFoundWeapon)]
+				
+				-- Eventos por defecto
+				if TraditionalEvent then
+					TraditionalEvent:InvokeServer(CFrame.new(P_Inicio, P_Destino), P_Destino, RandomWeapon, Target)
+				end
+				if CobaltEvent then
+					CobaltEvent:FireServer(CFrame.new(P_Inicio, P_Destino), CFrame.new(P_Destino, Vector3.new(0,1,0)))
+				end
+				
+				-- NUEVO: Ejecuta también todos los RemoteEvents personalizados añadidos por ti
+				for _, customEvent in ipairs(CustomRemoteEvents) do
+					pcall(function()
+						customEvent:FireServer(CFrame.new(P_Inicio, P_Destino), P_Destino, RandomWeapon, Target)
+					end)
+				end
+			end)
+		end
+	else
+		task.spawn(function()
+			local Grados = math.random() * 6.28318
+			local ConvX = math.cos(Grados)
+			local ConvZ = math.sin(Grados)
+			local Offset = SafeDistanceActive and Vector3.new(0, 3, 0) or Vector3.new(0, 0, 0)
+			local P_Inicio = Torso.Position + Vector3.new(ConvX * 0.05, 0, ConvZ * 0.05) + Offset
+			local P_Destino = Torso.Position + Vector3.new(ConvX * 600, 0, ConvZ * 600) + Offset
+			
+			-- Eventos por defecto
+			if TraditionalEvent then
+				TraditionalEvent:InvokeServer(CFrame.new(P_Inicio, P_Destino), P_Destino, ExperimentalKnifeName, Target)
+			end
+			if CobaltEvent then
+				CobaltEvent:FireServer(CFrame.new(P_Inicio, P_Destino), CFrame.new(P_Destino, Vector3.new(0,1,0)))
+			end
+			
+			-- NUEVO: Ejecuta también todos los RemoteEvents personalizados añadidos por ti
+			for _, customEvent in ipairs(CustomRemoteEvents) do
+				pcall(function()
+					customEvent:FireServer(CFrame.new(P_Inicio, P_Destino), P_Destino, ExperimentalKnifeName, Target)
+				end)
+			end
+		end)
+	end
 end
-if CobaltEvent then
-CobaltEvent:FireServer(CFrame.new(P_Inicio, P_Destino), CFrame.new(P_Destino, Vector3.new(0,1,0)))
+
 end
-end)
+
+function GetWorkspacePart() 
+local Parts = {} 
+for _, Object in ipairs(workspace:GetDescendants()) do 
+if Object:IsA("BasePart") and Object.CanQuery then table.insert(Parts, Object) end 
+end 
+if #Parts > 0 then return Parts[math.random(1, #Parts)] end 
+return nil 
 end
-else
-task.spawn(function()
-local Grados = math.random() * 6.28318
-local ConvX = math.cos(Grados)
-local ConvZ = math.sin(Grados)
-local Offset = SafeDistanceActive and Vector3.new(0, 3, 0) or Vector3.new(0, 0, 0)
-local P_Inicio = Torso.Position + Vector3.new(ConvX * 0.05, 0, ConvZ * 0.05) + Offset
-local P_Destino = Torso.Position + Vector3.new(ConvX * 600, 0, ConvZ * 600) + Offset
-if TraditionalEvent then
-TraditionalEvent:InvokeServer(CFrame.new(P_Inicio, P_Destino), P_Destino, ExperimentalKnifeName, Target)
-end
-if CobaltEvent then
-CobaltEvent:FireServer(CFrame.new(P_Inicio, P_Destino), CFrame.new(P_Destino, Vector3.new(0,1,0)))
-end
-end)
-end
-end
-end
-function GetWorkspacePart()
-local Parts = {}
-for _, Object in ipairs(workspace:GetDescendants()) do
-if Object:IsA("BasePart") and Object.CanQuery then table.insert(Parts, Object) end
-end
-if #Parts > 0 then return Parts[math.random(1, #Parts)] end
-return nil
-end
-task.spawn(function()
-while true do
-if IsScriptActive then
-if TargetEveryoneActive then
-local SavedPlayer = LocalPlayer
-if TargetExceptName ~= "" then
-local MatchExcept = FindPlayerPartial(TargetExceptName)
-if MatchExcept then SavedPlayer = MatchExcept end
-end
-for _, P in ipairs(Players:GetPlayers()) do
-if P ~= SavedPlayer and P.Character then
-task.spawn(function() FireKnifeFromCharacter(P.Character) end)
-end
-end
-else
-local TargetCharacter = LocalPlayer.Character
-local FoundPlayer = FindPlayerPartial(TargetPlayerName)
-if FoundPlayer then TargetCharacter = FoundPlayer.Character end
-FireKnifeFromCharacter(TargetCharacter)
-end
-end
-task.wait(LoopSpeed)
-end
+
+task.spawn(function() 
+while true do 
+if IsScriptActive then 
+if TargetEveryoneActive then 
+local SavedPlayer = LocalPlayer 
+if TargetExceptName ~= "" then 
+local MatchExcept = FindPlayerPartial(TargetExceptName) 
+if MatchExcept then SavedPlayer = MatchExcept end 
+end 
+for _, P in ipairs(Players:GetPlayers()) do 
+if P ~= SavedPlayer and P.Character then 
+task.spawn(function() FireKnifeFromCharacter(P.Character) end) 
+end 
+end 
+else 
+local TargetCharacter = LocalPlayer.Character 
+local FoundPlayer = FindPlayerPartial(TargetPlayerName) 
+if FoundPlayer then TargetCharacter = FoundPlayer.Character end 
+FireKnifeFromCharacter(TargetCharacter) 
+end 
+end 
+task.wait(LoopSpeed) 
+end 
 end)
